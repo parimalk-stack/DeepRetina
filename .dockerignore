@@ -1,0 +1,124 @@
+# Docker ignore file for OCT Analysis Webapp
+
+# =============================================================================
+# Development and Build Files
+# =============================================================================
+.git
+.gitignore
+.github
+.vscode
+.idea
+*.md
+README*
+CHANGELOG*
+LICENSE*
+
+# Python cache and build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+.env
+.env.*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter notebooks
+.ipynb_checkpoints
+
+# =============================================================================
+# Application Specific
+# =============================================================================
+
+# Temporary upload files (will be recreated)
+static/uploads/*.jpg
+static/uploads/*.jpeg
+static/uploads/*.png
+static/uploads/*.gif
+static/uploads/viz_*
+static/uploads/class_distribution_*
+static/uploads/confidence_distribution_*
+static/uploads/confusion_matrix_*
+static/uploads/quality_viz_*
+
+# Logs
+logs/
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Configuration files with sensitive data
+.env.prod
+config.ini
+secrets.json
+
+# =============================================================================
+# System Files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+desktop.ini
+
+# =============================================================================
+# Docker and Deployment
+# =============================================================================
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+deployment/
+k8s/
+
+# =============================================================================
+# Documentation and Reports
+# =============================================================================
+docs/
+*.pdf
+WEBAPP_FIX_REPORT.md
+test_results/
+benchmarks/
+
+# =============================================================================
+# Keep These Files (Override ignore patterns)
+# =============================================================================
+!models/
+!models/*.pth
+!models/vit_oct_model/
+!requirements*.txt
+!static/css/
+!static/js/
+!static/image/

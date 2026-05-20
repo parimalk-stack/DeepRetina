@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>DeepRetina</title>
+    <link rel="icon" href="/static/image/favicon-removebg-preview.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-secondary">
+        <div class="container">
+            <a class="navbar-brand" href="#"><img src="/static/image/deepretinaimg-removebg-preview.png" alt="DeepRetina Logo"></a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Analysis</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="compare-tab" data-bs-toggle="tab" data-bs-target="#compare" type="button" role="tab">Compare Models</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality" type="button" role="tab">Quality Assessment</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">Batch Analysis</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3" id="myTabContent">
+                    <!-- Single Analysis Tab -->
+                    <div class="tab-pane fade show active" id="single" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Single Image Analysis</h5>
+                                <form id="singleAnalysisForm">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="mb-3">
+                                        <label for="modelSelect" class="form-label">Select Model</label>
+                                        <select class="form-select" id="modelSelect" name="model">
+                                            {% for model in models %}
+                                            <option value="{{ model }}">{{ model_metadata[model].name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted" id="modelInfo"></small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div id="singleDropzone" class="dropzone"></div>
+                                    </div>
+                                    <button type="button" id="analyzeBtn" class="btn btn-primary" disabled>Analyze</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="singleResultContainer" style="display: none;" class="mt-4">
+                    <div class="card">
+                        <div class="card-body">
+                                    <h5 class="card-title">Analysis Results</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                            <h6>Original Image</h6>
+                                            <img id="originalImage" class="img-fluid" alt="Original image">
+                                        </div>
+                                        <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                            <h6>Result Visualization</h6>
+                                            <img id="resultImage" class="img-fluid" alt="Result visualization">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Prediction Details</h6>
+                                        <p>Predicted Class: <span id="predictionResult" class="fw-bold"></span></p>
+                                        <p>Confidence: <span id="confidenceValue" class="fw-bold"></span>%</p>
+                                        <p>Processing Time: <span id="processingTime" class="fw-bold"></span>s</p>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Class Probabilities</h6>
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>CNV</span>
+                                                <span id="cnvProb"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="cnvBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>DME</span>
+                                                <span id="dmeProb"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="dmeBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>DRUSEN</span>
+                                                <span id="drusenProb"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="drusenBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span>NORMAL</span>
+                                                <span id="normalProb"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="normalBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button id="newImageButton" class="btn btn-secondary mt-3">Analyze New Image</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compare Models Tab -->
+                    <div class="tab-pane fade" id="compare" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Compare Models</h5>
+                                <form id="compareModelsForm">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Models to Compare</label>
+                                        {% for model in models %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="models" value="{{ model }}" id="{{ model }}Check">
+                                            <label class="form-check-label" for="{{ model }}Check">
+                                                {{ model_metadata[model].name }}
+                                                <small class="text-muted d-block">{{ model_metadata[model].architecture }} - {{ model_metadata[model].parameters }}</small>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        <div id="compareDropzone" class="dropzone"></div>
+                                    </div>
+                                    <button type="button" id="compareBtn" class="btn btn-primary" disabled>Compare Models</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="compareResultContainer" style="display: none;" class="mt-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Comparison Results</h5>
+                                    <div class="row mb-4">
+                                        <div class="col-md-12 text-center">
+                                            <h6>Original Image</h6>
+                                            <img id="compareOriginalImage" class="img-fluid" alt="Original image">
+                                        </div>
+                                    </div>
+                                    <div class="row" id="modelResults">
+                                        <!-- Model results will be inserted here -->
+                                    </div>
+                                    <button id="newCompareButton" class="btn btn-secondary mt-3">Compare New Image</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quality Assessment Tab -->
+                    <div class="tab-pane fade" id="quality" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Quality Assessment</h5>
+                                <form id="qualityAssessmentForm">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="mb-3">
+                                        <div id="qualityDropzone" class="dropzone"></div>
+                                    </div>
+                                    <button type="button" id="assessQualityBtn" class="btn btn-primary" disabled>Assess Quality</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="qualityResultContainer" style="display: none;" class="mt-4">
+                            <div class="card">
+                        <div class="card-body">
+                                    <h5 class="card-title">Quality Assessment Results</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                            <h6>Original Image</h6>
+                                            <img id="qualityOriginalImage" class="img-fluid" alt="Original image">
+                                </div>
+                                <div class="col-md-6">
+                                            <h6>Quality Visualization</h6>
+                                            <img id="qualityVisualization" class="img-fluid" alt="Quality visualization">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Quality Metrics</h6>
+                                        <p>Overall Quality Score: <span id="qualityScore" class="fw-bold"></span></p>
+                                        <p>Status: <span id="qualityStatusBadge" class="badge"></span></p>
+                                        <p>Signal-to-Noise Ratio: <span id="qualitySNR" class="fw-bold"></span></p>
+                                        <p>Motion Artifacts: <span id="qualityMotion" class="fw-bold"></span></p>
+                                        <p>Contrast: <span id="qualityContrast" class="fw-bold"></span></p>
+                                        <p>Blur Metric: <span id="qualityBlur" class="fw-bold"></span></p>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Recommendations</h6>
+                                        <ul id="qualityRecommendations">
+                                            <!-- Recommendations will be inserted here -->
+                                        </ul>
+                                    </div>
+                                    <button id="newQualityButton" class="btn btn-secondary mt-3">Assess New Image</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Analysis Tab -->
+                    <div class="tab-pane fade" id="batch" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Batch Analysis</h5>
+                                <form id="batchAnalysisForm">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="mb-3">
+                                        <label for="batchAnalysisType" class="form-label">Analysis Type</label>
+                                        <select class="form-select" id="batchAnalysisType" name="analysis_type">
+                                            <option value="disease">Disease Classification</option>
+                                            <option value="quality_assessment">Quality Assessment</option>
+                                        </select>
+                            </div>
+                                    <div id="batchModelSelection" class="mb-3">
+                                        <label for="batchModelSelect" class="form-label">Select Model</label>
+                                        <select class="form-select" id="batchModelSelect" name="model">
+                                            {% for model in models %}
+                                            <option value="{{ model }}">{{ model_metadata[model].name }}</option>
+                                            {% endfor %}
+                                        </select>
+                            </div>
+                                    <div class="mb-3">
+                                        <div id="batchDropzone" class="dropzone"></div>
+                            </div>
+                                    <button type="button" id="batchAnalyzeBtn" class="btn btn-primary" disabled>Analyze Batch</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="batchResultContainer" style="display: none;" class="mt-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Batch Analysis Results</h5>
+                                    <div class="row mb-4">
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>Total Files</h6>
+                                                    <p id="batchTotalFiles" class="h4"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>Processed Files</h6>
+                                                    <p id="batchProcessedFiles" class="h4"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>Average Quality</h6>
+                                                    <p id="batchAvgQuality" class="h4"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>Processing Time</h6>
+                                                    <p id="batchProcessingTime" class="h4"></p>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                                    <div class="row mb-4" id="batchVisualizations">
+                                        <!-- Visualizations will be inserted here -->
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <h6>Detailed Results</h6>
+                                        <div id="batchDetailedResults">
+                                            <!-- Detailed results will be inserted here -->
+                            </div>
+                            </div>
+
+                                    <div class="mt-3">
+                                        <button id="exportBatchCSV" class="btn btn-secondary">Export CSV</button>
+                                        <button id="exportBatchReport" class="btn btn-secondary">Export Report</button>
+                                        <button id="newBatchButton" class="btn btn-secondary">New Batch</button>
+                            </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
